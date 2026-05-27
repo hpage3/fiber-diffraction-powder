@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # The atomic number of the unique atoms in the structure. Used as scattering factors.
-atomic_number = {'C': 6, 'N': 7, 'O': 8}
+atomic_number = {'C': 6, 'N': 7, 'O': 8, 'P': 15}
 
 def Rx(angle_deg):
     """Rotation matrix around x"""
