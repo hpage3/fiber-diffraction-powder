@@ -55,6 +55,7 @@ def convert_pdb_to_xyz(args):
     skipped_waters = 0
     skipped_hetatm = 0
     skipped_altloc = 0
+    skipped_exact_duplicates = 0
 
     with open(args.input_pdb, "r", encoding="utf-8") as pdb_file:
         for line_number, line in enumerate(pdb_file, start=1):
@@ -82,6 +83,18 @@ def convert_pdb_to_xyz(args):
 
             atoms.append(atom)
 
+    if args.dedupe_exact:
+        deduped_atoms = []
+        seen = set()
+        for atom in atoms:
+            key = (atom["element"], atom["x"], atom["y"], atom["z"])
+            if key in seen:
+                skipped_exact_duplicates += 1
+                continue
+            seen.add(key)
+            deduped_atoms.append(atom)
+        atoms = deduped_atoms
+
     if not atoms:
         raise ValueError("No atoms written after applying filters")
 
@@ -89,6 +102,7 @@ def convert_pdb_to_xyz(args):
         f"include_hetatm={args.include_hetatm}",
         f"keep_hydrogens={args.keep_hydrogens}",
         f"include_water={args.include_water}",
+        f"dedupe_exact={args.dedupe_exact}",
     ]
     comment = f"Converted from {args.input_pdb}; " + ", ".join(filters)
 
@@ -109,6 +123,7 @@ def convert_pdb_to_xyz(args):
         "skipped_waters": skipped_waters,
         "skipped_hetatm": skipped_hetatm,
         "skipped_altloc": skipped_altloc,
+        "skipped_exact_duplicates": skipped_exact_duplicates,
     }
 
 
@@ -124,6 +139,7 @@ def print_summary(args, summary):
     print(f"Skipped waters: {summary['skipped_waters']}")
     print(f"Skipped HETATM records: {summary['skipped_hetatm']}")
     print(f"Skipped alternate locations: {summary['skipped_altloc']}")
+    print(f"Skipped exact duplicates: {summary['skipped_exact_duplicates']}")
 
 
 def build_parser():
@@ -146,6 +162,11 @@ def build_parser():
         "--include-water",
         action="store_true",
         help="Keep water residues such as HOH, WAT, and H2O.",
+    )
+    parser.add_argument(
+        "--dedupe-exact",
+        action="store_true",
+        help="Remove exact duplicate atoms after filtering, keyed by element and coordinates.",
     )
     return parser
 
