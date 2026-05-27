@@ -9,14 +9,8 @@ import matplotlib.pyplot as plt
 from scripts import (
     atomic_number,
     helix_maker,
-    generate_fiber_diffraction,
-    Ry,
-    Rz,
 )
-
-
-def parse_number_list(value):
-    return [float(item.strip()) for item in value.split(",") if item.strip()]
+from orientation_average import average_fiber_diffraction, parse_angle_list
 
 
 def load_xyz(path):
@@ -60,8 +54,8 @@ def main():
     parser.add_argument("--output-prefix", default="benchmark_fiber")
     args = parser.parse_args()
 
-    tilts = parse_number_list(args.tilts)
-    rotations = parse_number_list(args.rotations)
+    tilts = parse_angle_list(args.tilts)
+    rotations = parse_angle_list(args.rotations)
     orientation_count = len(tilts) * len(rotations)
 
     wavelength = 0.7749e-7
@@ -87,24 +81,21 @@ def main():
     coords *= 1e-7  # Angstroms to mm
     atomic_numbers = atomic_numbers_for(atoms)
 
-    diffraction_data = np.zeros((args.grid_size, args.grid_size))
-
-    for tilt in tilts:
-        tilted_coords = np.dot(Ry(tilt), coords.T).T
-
-        for rotation in rotations:
-            print(f"Calculating tilt={tilt:g}, rotation={rotation:g}")
-            rotated_coords = np.dot(Rz(rotation), tilted_coords.T).T
-            diffraction_data += generate_fiber_diffraction(
-                atomic_numbers,
-                rotated_coords,
-                wavelength,
-                distance_to_detector,
-                z_grid_limits,
-                x_grid_limits,
-                args.grid_size,
-                args.grid_size,
-            )
+    diffraction_data = average_fiber_diffraction(
+        atomic_numbers,
+        coords,
+        wavelength,
+        distance_to_detector,
+        z_grid_limits,
+        x_grid_limits,
+        args.grid_size,
+        args.grid_size,
+        tilts,
+        rotations,
+        progress_callback=lambda tilt, rotation: print(
+            f"Calculating tilt={tilt:g}, rotation={rotation:g}"
+        ),
+    )
 
     npy_file = f"{args.output_prefix}.npy"
     png_file = f"{args.output_prefix}.png"
