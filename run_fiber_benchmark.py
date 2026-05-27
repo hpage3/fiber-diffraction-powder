@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import numpy as np
 import matplotlib
@@ -53,10 +54,12 @@ def main():
     )
     parser.add_argument("--output-prefix", default="benchmark_fiber")
     args = parser.parse_args()
+    start_time = time.perf_counter()
 
     tilts = parse_angle_list(args.tilts)
     rotations = parse_angle_list(args.rotations)
     orientation_count = len(tilts) * len(rotations)
+    detector_pixels = args.grid_size * args.grid_size
 
     wavelength = 0.7749e-7
     distance_to_detector = 338.4
@@ -76,7 +79,13 @@ def main():
     )
     print(f"Atoms after helix_maker: {len(atoms)}")
     print(f"Grid size: {args.grid_size} x {args.grid_size}")
+    print(f"Detector pixels: {detector_pixels}")
+    print(f"Number of atoms: {len(atoms)}")
     print(f"Number of orientations: {orientation_count}")
+    print(
+        "Approximate atom-pixel-orientation operations: "
+        f"{len(atoms) * detector_pixels * orientation_count}"
+    )
 
     coords *= 1e-7  # Angstroms to mm
     atomic_numbers = atomic_numbers_for(atoms)
@@ -127,6 +136,10 @@ def main():
     print(f"Min intensity: {diffraction_data.min()}")
     print(f"Max intensity: {max_intensity}")
     print(f"Mean intensity: {diffraction_data.mean()}")
+    elapsed_seconds = time.perf_counter() - start_time
+    seconds_per_orientation = elapsed_seconds / orientation_count
+    print(f"Total wall-clock runtime, seconds: {elapsed_seconds:.3f}")
+    print(f"Average seconds per orientation: {seconds_per_orientation:.3f}")
 
 
 if __name__ == "__main__":
