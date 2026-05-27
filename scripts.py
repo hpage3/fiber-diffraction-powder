@@ -77,8 +77,8 @@ def generate_fiber_diffraction(atoms, coord, wavelength, distance_to_detector,
             # Use the atomic numbers as scattering factors
             dist = coord[:, 1] + np.sqrt((x + coord[:, 0])**2 + (distance_to_detector - coord[:, 1])**2
                                          + (z + coord[:, 2])**2)
-            s  = np.sum(atoms * np.cos(2*np.pi/wavelength*dist)) * np.complex(1, 0)
-            s += np.sum(atoms * np.sin(2*np.pi/wavelength*dist)) * np.complex(0, 1)
+            s  = np.sum(atoms * np.cos(2*np.pi/wavelength*dist)) * complex(1, 0)
+            s += np.sum(atoms * np.sin(2*np.pi/wavelength*dist)) * complex(0, 1)
             out[i, j] = (s * np.conj(s)).real # Multiply by the complex conjugate to get the intensity
             
     return out
