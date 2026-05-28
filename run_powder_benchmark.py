@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from orientation_average import average_powder_diffraction
+from orientation_average import average_powder_diffraction_parallel
 from scripts import atomic_number
 
 
@@ -44,6 +44,7 @@ def main():
     parser.add_argument("--phi-count", type=int, default=8)
     parser.add_argument("--psi-count", type=int, default=3)
     parser.add_argument("--theta-max", type=float, default=180.0)
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--output-prefix", default="outputs/hexaplex_powder_test")
     args = parser.parse_args()
     start_time = time.perf_counter()
@@ -62,6 +63,7 @@ def main():
     print(f"Detector pixels: {detector_pixels}")
     print(f"Number of atoms: {len(atoms)}")
     print(f"Number of orientations: {orientation_count}")
+    print(f"Workers requested: {args.workers}")
     print(
         "Approximate atom-pixel-orientation operations: "
         f"{len(atoms) * detector_pixels * orientation_count}"
@@ -70,7 +72,7 @@ def main():
     coords *= 1e-7  # Angstroms to mm
     atomic_numbers = atomic_numbers_for(atoms)
 
-    diffraction_data = average_powder_diffraction(
+    diffraction_data = average_powder_diffraction_parallel(
         atomic_numbers,
         coords,
         wavelength,
@@ -83,6 +85,7 @@ def main():
         args.phi_count,
         args.psi_count,
         theta_max=args.theta_max,
+        workers=args.workers,
     )
 
     npy_file = f"{args.output_prefix}.npy"
